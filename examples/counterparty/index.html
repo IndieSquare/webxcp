@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
  
 <html>
 <head>
-  <title>Bootstrap Example</title>
+  <title>Demo XCP dAPP</title>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
@@ -12,69 +13,28 @@
 <body>
 
 <div class="container">
-<h1>Test dAPP</h1> 
+<h1>Demo XCP dAPP v1.5</h1> 
 
  <div class="form-group">
-<!--
-<div class="form-check">
-    <label class="form-check-label">
-      <input type="checkbox" class="form-check-input" id="testnet" checked>
-      Use Ropsten testnet
-    </label>
-  </div>-->
+ 
 
  </div>
   <form >
     <div class="form-group">
-      <label for="email">1.Calls web3.getaccounts and gets current account from native app</label>
+      <label for="email">1.Calls webXCP.getAccounts and gets current account/address from native app</label>
     </div>
      <button type="button" class="btn btn-primary" onclick="getAccounts()">unlock account</button>
      <br><br>
      <p id="account"> </p>
-<br> 
-     <div class="form-group">
-      <label for="email">2.Gets the current ether balance for the unlocked address</label>
+     
+     
+      <div class="form-group">
+      <label for="email">1.Calls webXCP.signMessage and signs the message "Hello world"</label>
     </div>
-     <button type="button" class="btn btn-primary" onclick="getBalances()">get balances</button>
+     <button type="button" class="btn btn-primary" onclick="signMessage()">sign message</button>
      <br><br>
-     <p id="balance" > </p>
+     <p id="signature"> </p>
  
-<br> 
-
- 
-  <div class="form-group mx-sm-3">
-    <label>3.Sign an entered message via the native app</label>
-    <input type="text" class="form-control" id="messageToSign" placeholder="enter a message">
-  </div>
-  <button type="button" class="btn btn-primary" onclick="signMessage()">Sign message</button>
- <br><br>
-<p id="signature" style=" word-break: break-all;
-    white-space: normal;"> </p>
-<br>
-<div class="form-group mx-sm-3">
-    <label>4.Sign a transaction sending ether to an address</label>
-    <label for="inputPassword2" class="sr-only">Password</label>
-    <input type="text" class="form-control" id="toAddressEther" placeholder="to address">
-    <input type="number" class="form-control" id="amountEther" placeholder="e.g. 1">
-  </div>
-  <button  type="button"  class="btn btn-primary" onclick="signTransaction()">Sign transaction</button>
-    <br><br>
-   <p id="signatureTx" style=" word-break: break-all;
-    white-space: normal;"> </p>
-<br>
-  <div class="form-group mx-sm-3">
-    <label>4.Sign a transaction sending a token to an address</label>
-    <label for="inputPassword2" class="sr-only">Password</label>
-    <input type="text" class="form-control" id="toAddressToken" placeholder="to address">
-    <input type="text" class="form-control" id="tokenContractAddress" placeholder="token contract address">
-    <input type="number" class="form-control" id="amountToken" placeholder="e.g. 1">
-  </div>
-
-  <button  type="button"  class="btn btn-primary" onclick="signTokenTransaction()">Sign token transaction</button>
-    <br><br>
-   <p id="signatureTxToken" style=" word-break: break-all;
-    white-space: normal;"> </p>
-    <br>
   </form>
 </div> 
 <script>
@@ -83,13 +43,14 @@
 var currentAccount = null;
 
 function getAccounts() {
+
      try{
        document.getElementById("account").innerHTML = "please wait...";
-    web3.eth.getAccounts((err, acc) => {
+    webXCP.getAccounts(null,(err, acc) => {
     if(err != null){
 document.getElementById("account").innerHTML = "error:"+err;
     }else{
-   currentAccount = acc[0];
+   currentAccount = acc;
     document.getElementById("account").innerHTML =  currentAccount
   }
 });
@@ -105,7 +66,7 @@ document.getElementById("account").innerHTML = "error:"+err;
 function getBalances() {
  if(currentAccount != null){
   document.getElementById("balance").innerHTML = "please wait...";
-web3.eth.getBalance(currentAccount, function (error, result) {
+ webXCP.getBalance(currentAccount, function (error, result) {
 		 
     if (!error) {
    
@@ -121,20 +82,20 @@ alert("Please unlock account first");
 }
 
 function signMessage() {
-    
-   if(currentAccount != null){
+   
+    if(currentAccount != null){
      document.getElementById("signature").innerHTML = "please wait...";
     try{
 
- var msg = document.getElementById("messageToSign").value;
- 
+ //var msg = document.getElementById("messageToSign").value;
+ var msg = "Hello world";
  if(msg == undefined || msg == ""){
   alert("please enter a message" );
   return;
  }
-
-  var from = currentAccount
-  web3.eth.sign(from, msg, function (err, result) {
+  
+  
+  webXCP.signMessage(null, msg, function (err, result) {
     if(err != undefined){
       document.getElementById("signature").innerHTML = "error:"+err;
     }else{
@@ -142,7 +103,7 @@ function signMessage() {
        document.getElementById("signature").innerHTML = result;
     }
    
-  })
+  }) 
 
 }
 catch(e){
@@ -151,7 +112,7 @@ catch(e){
  }
  else{
  alert("Please unlock account first");
- }
+ } 
 }
 
 function signTokenTransaction() {
@@ -250,38 +211,19 @@ catch(e){
 }
 
 
-function signTransaction() {
-    
-   if(currentAccount != null){
-document.getElementById("signatureTx").innerHTML = "please wait...";
-    var destAddress = document.getElementById("toAddressEther").value;
- if(destAddress == undefined || destAddress  == ""){
-  alert("please enter a destination address");
-  return;
- }
+function signSendTransaction() {
 
-    var amountEther = document.getElementById("amountEther").value;
- if(amountEther == undefined || amountEther  == ""){
-  alert("please enter an amount");
-  return;
- }
+    
+ 
+document.getElementById("signatureTx").innerHTML = "please wait...";
+   
 
     try{
 
-     var txparams = {
-    from:  currentAccount,
-    gasPrice: "20000000000",
-    gas: "21000",
-    to: destAddress,
-    value: parseFloat(amountEther)  * Math.pow(10, 18),
-    data: "",
-    chainId: chainId //main
-    }
 
+      var unsignedHex = "0100000001b8bc634b27be32d0ba1e032054a0681626e3cc228fc6ff1bab227ebbbcaf7826010000001976a914edee861dff4de166683e4c54ae3869cd05c7ae0f88acfdffffff020000000000000000306a2ea422104669bfd3cb7def92af0459a97d305aa17b25f2730a80c85aa5dfea923871c4e2a2733d51444aacf904b773ae4f0000000000001976a914edee861dff4de166683e4c54ae3869cd05c7ae0f88ac00000000";
 
- 
-  
-  web3.eth.signTransaction(txparams, function (err, result) {
+  webXCP.signTransaction(unsignedHex, function (err, result) {
 
     if(err != undefined){
 
@@ -293,16 +235,14 @@ document.getElementById("signatureTx").innerHTML = "please wait...";
     
     }
    
-  })
+  }) 
+
 
 }
 catch(e){
   alert("error:"+e);
 }
- }
- else{
- alert("Please unlock account first");
- }
+  
 }
 
 var humanReadableAbi = [

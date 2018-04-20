@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Demo ETH dAPP</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Demo ETH dAPP v1.03</h1>
+
+        <div class="form-group">
+
+
+        </div>
+        <form>
+            <div class="form-group">
+                <label for="email">1.Calls web3.getaccounts and gets current account from native app</label>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="getAccounts()">unlock account</button>
+            <br><br>
+            <p id="account"> </p>
+            <br>
+            <div class="form-group">
+                <label for="email">2.Gets the current ether balance for the unlocked address</label>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="getBalances()">get balances</button>
+            <br><br>
+            <p id="balance"> </p>
+
+            <br>
+
+
+            <div class="form-group mx-sm-3">
+                <label>3.Sign an entered message via the native app</label>
+                <input type="text" class="form-control" id="messageToSign" placeholder="enter a message">
+            </div>
+            <button type="button" class="btn btn-primary" onclick="signMessage()">Sign message</button>
+            <br><br>
+            <p id="signature" style=" word-break: break-all;
+    white-space: normal;"> </p>
+            <br>
+
+            <div class="form-group mx-sm-3">
+                <label>4.Sign a transaction sending a token to an address</label>
+                <label for="inputPassword2" class="sr-only">Password</label>
+                <input type="text" class="form-control" id="toAddressToken" placeholder="to address">
+                <input type="text" class="form-control" id="tokenContractAddress" placeholder="'ETH' or token contract address">
+                <input type="number" class="form-control" id="amountToken" placeholder="e.g. 1">
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="sendTransaction()">Sign & send transaction</button>
+            <br><br>
+            <p id="signatureTxToken" style=" word-break: break-all;
+    white-space: normal;"> </p>
+            <br>
+        </form>
+    </div>
+    <script>
+        var chainId = 0x01; //0x03; //test
+        var currentAccount = null;
+
+        function getAccounts() {
+            try {
+                document.getElementById("account").innerHTML = "please wait...";
+                web3.eth.getAccounts((err, acc) => {
+                    if (err != null) {
+                        document.getElementById("account").innerHTML = "error:" + err;
+                    } else {
+                        currentAccount = acc[0];
+                        document.getElementById("account").innerHTML = currentAccount
+                    }
+                });
+
+
+
+            } catch (e) {
+                alert(e);
+            }
+        }
+
+        function getBalances() {
+            if (currentAccount != null) {
+                document.getElementById("balance").innerHTML = "please wait...";
+                web3.eth.getBalance(currentAccount, function(error, result) {
+
+                    if (!error) {
+
+                        document.getElementById("balance").innerHTML = result.toString();
+                    } else {
+                        document.getElementById("balance").innerHTML = "error:" + err;
+                    }
+                });
+            } else {
+                alert("Please unlock account first");
+            }
+        }
+
+        function signMessage() {
+
+            if (currentAccount != null) {
+                document.getElementById("signature").innerHTML = "please wait...";
+                try {
+
+                    var msg = document.getElementById("messageToSign").value;
+
+                    if (msg == undefined || msg == "") {
+                        alert("please enter a message");
+                        return;
+                    }
+
+                    var from = currentAccount
+                    web3.eth.sign(from, msg, function(err, result) {
+                        if (err != undefined) {
+                            document.getElementById("signature").innerHTML = "error:" + err;
+                        } else {
+
+                            document.getElementById("signature").innerHTML = result;
+                        }
+
+                    })
+
+                } catch (e) {
+                    alert("s" + e);
+                }
+            } else {
+                alert("Please unlock account first");
+            }
+        }
+
+        function sendTransaction() {
+
+            if (currentAccount != null) {
+                document.getElementById("signatureTxToken").innerHTML = "please wait...";
+                //"0x16384087512719153675825f591ad5f6fc3429d4";
+
+                var destAddress = document.getElementById("toAddressToken").value;
+                if (destAddress == undefined || destAddress == "") {
+                    alert("please enter a destination address");
+                    return;
+                }
+
+                var amountToken = document.getElementById("amountToken").value;
+                if (amountToken == undefined || amountToken == "") {
+                    alert("please enter an amount");
+                    return;
+                }
+
+                var contractAddress = document.getElementById("tokenContractAddress").value;
+                if (contractAddress == undefined || contractAddress == "") {
+                    alert("please enter a contract address");
+                    return;
+                }
+
+
+
+                var http = new XMLHttpRequest();
+
+                var url = "https://api.indiesquare.me/eth/v1/transactions/send";
+
+                var params = {
+                    "from": currentAccount,
+                    "to": destAddress,
+                    "token": contractAddress,
+                    "amount": amountToken
+                }
+
+                http.open("POST", url, true);
+
+                http.setRequestHeader("Content-type", "application/json");
+
+                http.onreadystatechange = function() {
+       
+                    if (http.readyState == 4) {
+
+                        if (http.status == 200) {
+
+
+   var unsignedTransaction = JSON.parse(http.responseText);
+
+                        try {
+
+
+
+                            web3.eth.sendTransaction(unsignedTransaction, function(err, result) {
+
+                                if (err != undefined) {
+
+                                        document.getElementById("signatureTxToken").innerHTML = "sign error:" + JSON.stringify(err);
+
+                                    } else {
+
+                                        document.getElementById("signatureTxToken").innerHTML = "broadcast! txid:"+result;
+
+
+                                       
+
+                                    }
+
+
+                            })
+
+
+
+                        } catch (e) {
+                            alert(e);
+                        }
+
+                      }
+                     else {
+
+                        document.getElementById("signatureTxToken").innerHTML = "error creating transaction:" + http.statusText + " " + http.responseText;
+
+                    }
+                  }
+                }
+
+                http.send(JSON.stringify(params));
+
+            } else {
+                alert("Please unlock account first");
+            }
+        }
+    </script>
+    
+
+</body>
+
+</html>
